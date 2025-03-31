@@ -18,6 +18,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 
 @SuppressWarnings("deprecation")
 @WebMvcTest(CoreProcessController.class)
@@ -52,5 +54,32 @@ class CoreProcessControllerTest {
                 .andExpect(jsonPath("$.data[1].name", is("Item 2")))
                 .andExpect(jsonPath("$.data[2].id", is(3)))
                 .andExpect(jsonPath("$.data[2].name", is("Item 3")));
+    }
+    
+    @Test
+    void getItemById_ShouldReturnSingleItem() throws Exception {
+        // Given
+        Item item = new Item(1L, "Item 1");
+        when(repository.findById(eq(1L))).thenReturn(java.util.Optional.of(item));
+        
+        // When/Then
+        mockMvc.perform(get("/api/coreProcess/items/1")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.data.id", is(1)))
+                .andExpect(jsonPath("$.data.name", is("Item 1")))
+                .andExpect(jsonPath("$.timestamp").isNumber());
+    }
+    
+    @Test
+    void getItemById_WithNonExistingId_ShouldReturnNotFound() throws Exception {
+        // Given
+        when(repository.findById(anyLong())).thenReturn(java.util.Optional.empty());
+        
+        // When/Then
+        mockMvc.perform(get("/api/coreProcess/items/999")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 }

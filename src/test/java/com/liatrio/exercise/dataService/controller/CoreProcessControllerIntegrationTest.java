@@ -36,4 +36,22 @@ class CoreProcessControllerIntegrationTest {
                 .andExpect(jsonPath("$.data[2].id", is(3)))
                 .andExpect(jsonPath("$.data[2].name", is("Item 3")));
     }
+    
+    @Test
+    void getItemById_ShouldReturnExistingItem() throws Exception {
+        mockMvc.perform(get("/api/coreProcess/items/1")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.data.id", is(1)))
+                .andExpect(jsonPath("$.data.name", is("Item 1")))
+                .andExpect(jsonPath("$.timestamp").isNumber());
+    }
+    
+    @Test
+    void getItemById_WithNonExistingId_ShouldReturnNotFound() throws Exception {
+        mockMvc.perform(get("/api/coreProcess/items/999")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
 }
