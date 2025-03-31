@@ -59,4 +59,17 @@ public class InMemoryCoreProcessItemsRepository implements CoreProcessItemsRepos
             return item;
         }
     }
+    
+    @Override
+    public void deleteById(Long id) {
+        // Check if item exists first
+        boolean exists = items.stream().anyMatch(item -> item.id().equals(id));
+        
+        if (!exists) {
+            throw new IllegalArgumentException("Item with ID " + id + " not found");
+        }
+        
+        // Remove the item
+        items.removeIf(item -> item.id().equals(id));
+    }
 }

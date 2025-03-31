@@ -13,7 +13,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -118,6 +121,30 @@ class CoreProcessControllerTest {
         
         // When/Then
         mockMvc.perform(get("/api/coreProcess/items/999")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+    
+    @Test
+    void deleteItem_ShouldReturnSuccessStatus() throws Exception {
+        // Given
+        Long itemId = 1L;
+        doNothing().when(repository).deleteById(eq(itemId));
+        
+        // When/Then
+        mockMvc.perform(delete("/api/coreProcess/items/" + itemId)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
+    
+    @Test
+    void deleteItem_WithNonExistingId_ShouldReturnNotFound() throws Exception {
+        // Given
+        Long nonExistingId = 999L;
+        doThrow(new IllegalArgumentException("Item not found")).when(repository).deleteById(eq(nonExistingId));
+        
+        // When/Then
+        mockMvc.perform(delete("/api/coreProcess/items/" + nonExistingId)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }

@@ -9,4 +9,5 @@ public interface CoreProcessItemsRepository {
     List<Item> findAll();
     Optional<Item> findById(Long id);
     Item save(Item item);
+    void deleteById(Long id);
 }
