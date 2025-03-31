@@ -8,4 +8,5 @@ import java.util.Optional;
 public interface CoreProcessItemsRepository {
     List<Item> findAll();
     Optional<Item> findById(Long id);
+    Item save(Item item);
 }
