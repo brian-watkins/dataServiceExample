@@ -2,21 +2,17 @@ package com.liatrio.exercise.dataService.controller;
 
 import com.liatrio.exercise.dataService.dto.ApiResponse;
 import com.liatrio.exercise.dataService.dto.CreateItemRequest;
+import com.liatrio.exercise.dataService.dto.UpdateItemRequest;
 import com.liatrio.exercise.dataService.model.Item;
 import com.liatrio.exercise.dataService.repository.CoreProcessItemsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/coreProcess")
@@ -71,6 +67,32 @@ public class CoreProcessController {
         try {
             repository.deleteById(id);
             return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PatchMapping("/items/{id}")
+    public ResponseEntity<ApiResponse<Item>> updateItem(@PathVariable Long id, @RequestBody UpdateItemRequest request) {
+        // Validate request
+        if (request == null || request.name() == null || request.name().trim().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        try {
+            // Find the item
+            Optional<Item> existingItemOpt = repository.findById(id);
+            if (existingItemOpt.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            // Update the item
+            Item existingItem = existingItemOpt.get();
+            Item updatedItem = new Item(existingItem.id(), request.name());
+            Item savedItem = repository.update(updatedItem);
+            
+            // Return updated item
+            return ResponseEntity.ok(ApiResponse.of(savedItem));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }

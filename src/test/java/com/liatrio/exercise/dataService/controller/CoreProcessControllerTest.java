@@ -2,6 +2,7 @@ package com.liatrio.exercise.dataService.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.liatrio.exercise.dataService.dto.CreateItemRequest;
+import com.liatrio.exercise.dataService.dto.UpdateItemRequest;
 import com.liatrio.exercise.dataService.model.Item;
 import com.liatrio.exercise.dataService.repository.CoreProcessItemsRepository;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -65,6 +67,58 @@ class CoreProcessControllerTest {
                 .andExpect(jsonPath("$.data[1].name", is("Item 2")))
                 .andExpect(jsonPath("$.data[2].id", is(3)))
                 .andExpect(jsonPath("$.data[2].name", is("Item 3")));
+    }
+    
+    @Test
+    void updateItem_ShouldReturnUpdatedItem() throws Exception {
+        // Given
+        Long itemId = 1L;
+        String newName = "Updated Item Name";
+        UpdateItemRequest updateRequest = new UpdateItemRequest(newName);
+        
+        Item originalItem = new Item(itemId, "Original Item Name");
+        Item updatedItem = new Item(itemId, newName);
+        
+        when(repository.findById(eq(itemId))).thenReturn(java.util.Optional.of(originalItem));
+        when(repository.update(any(Item.class))).thenReturn(updatedItem);
+        
+        // When/Then
+        mockMvc.perform(patch("/api/coreProcess/items/" + itemId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.data.id", is(1)))
+                .andExpect(jsonPath("$.data.name", is(newName)))
+                .andExpect(jsonPath("$.timestamp").isNumber());
+    }
+    
+    @Test
+    void updateItem_WithNonExistingId_ShouldReturnNotFound() throws Exception {
+        // Given
+        Long nonExistingId = 999L;
+        UpdateItemRequest updateRequest = new UpdateItemRequest("New Name");
+        
+        when(repository.findById(eq(nonExistingId))).thenReturn(java.util.Optional.empty());
+        
+        // When/Then
+        mockMvc.perform(patch("/api/coreProcess/items/" + nonExistingId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isNotFound());
+    }
+    
+    @Test
+    void updateItem_WithInvalidData_ShouldReturnBadRequest() throws Exception {
+        // Given
+        Long itemId = 1L;
+        UpdateItemRequest invalidRequest = new UpdateItemRequest(null);
+        
+        // When/Then
+        mockMvc.perform(patch("/api/coreProcess/items/" + itemId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(invalidRequest)))
+                .andExpect(status().isBadRequest());
     }
     
     @Test

@@ -72,4 +72,22 @@ public class InMemoryCoreProcessItemsRepository implements CoreProcessItemsRepos
         // Remove the item
         items.removeIf(item -> item.id().equals(id));
     }
+    
+    @Override
+    public Item update(Item item) {
+        // Check if the item exists
+        boolean exists = items.stream().anyMatch(i -> i.id().equals(item.id()));
+        
+        if (!exists) {
+            throw new IllegalArgumentException("Item with ID " + item.id() + " not found");
+        }
+        
+        // Remove the old item
+        items.removeIf(i -> i.id().equals(item.id()));
+        
+        // Add the updated item
+        items.add(item);
+        
+        return item;
+    }
 }
